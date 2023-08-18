@@ -1,3 +1,5 @@
+// ignore_for_file: prefer_typing_uninitialized_variables
+
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -27,104 +29,6 @@ class MyApp extends StatelessWidget {
   }
 }
 
-/*
-class _MyHomePageState extends State<MyHomePage> {
-  void getLocation() async {
-    Position position = await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.high);
-  }
-
-  double posla = 0.0;
-  double poslo = 0.0;
-  String country = "0";
-  String admin = "0";
-  String local = "0";
-  String sublocal = "0";
-  String post = "0";
-  String street = "0";
-  //    print(placemarks[0].locality);
-  //  print(placemarks[0].subLocality);
-  //print(placemarks[0].postalCode);
-  // print(placemarks[0].street);
-  late Position cl;
-  Future getposition() async {
-    bool services;
-    LocationPermission per = await Geolocator.checkPermission();
-
-    services = await Geolocator.isLocationServiceEnabled();
-    if (services == false) {
-      AwesomeDialog(
-          context: context,
-          title: "services",
-          body: const Text("serices not found"))
-        ..show();
-    }
-    if (per == LocationPermission.denied) {
-      per = await Geolocator.requestPermission();
-      if (per == LocationPermission.always) {}
-    }
-
-    print("=========================");
-    print(per);
-    print("===========================");
-  }
-
-  Future<Position> getLatAndLong() async {
-    return await Geolocator.getCurrentPosition().then((value) => value);
-  }
-
-  @override
-  void initState() {
-    getposition();
-    super.initState();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-        appBar: AppBar(
-          title: Text("dialog"),
-        ),
-        body: Column(children: [
-          Container(
-            child: GoogleMap(
-        mapType: MapType.hybrid,
-        initialCameraPosition: _kGooglePlex,
-        onMapCreated: (GoogleMapController controller) {
-          _controller.complete(controller);
-        },
-      ),
-            height: 500,
-            width: 400,
-          ),
-          ElevatedButton(
-              onPressed: () async {
-                cl = await getLatAndLong();
-                print("lat ${cl.latitude}");
-                print("Long ${cl.longitude}");
-                List<Placemark> placemarks =
-                    await placemarkFromCoordinates(cl.latitude, cl.longitude);
-                print(placemarks[0].country);
-                print(placemarks[0].administrativeArea);
-                print(placemarks[0].locality);
-                print(placemarks[0].subLocality);
-                print(placemarks[0].postalCode);
-                print(placemarks[0].street);
-                setState(() {
-                  posla = cl.latitude;
-                  poslo = cl.longitude;
-                  country = placemarks[0].country!;
-                  admin = placemarks[0].administrativeArea!;
-                  local = placemarks[0].locality!;
-                  sublocal = placemarks[0].subLocality!;
-                  post = placemarks[0].postalCode!;
-                  street = placemarks[0].street!;
-                });
-              },
-              child: Text("إظهر الاحداثيات")),
-        ]));
-  }
-}*/
 class MapSample extends StatefulWidget {
   const MapSample({super.key});
 
@@ -132,6 +36,7 @@ class MapSample extends StatefulWidget {
   State<MapSample> createState() => MapSampleState();
 }
 
+// ignore: duplicate_ignore
 class MapSampleState extends State<MapSample> {
   double posla = 0.0;
   double poslo = 0.0;
@@ -145,7 +50,16 @@ class MapSampleState extends State<MapSample> {
   //  print(placemarks[0].subLocality);
   //print(placemarks[0].postalCode);
   // print(placemarks[0].street);
-  static late Position cl;
+  static Position cl = Position(
+      longitude: 0,
+      latitude: 0,
+      timestamp: DateTime.now(),
+      accuracy: 0,
+      altitude: 0,
+      heading: 0,
+      speed: 0,
+      speedAccuracy: 0);
+  // ignore: prefer_typing_uninitialized_variables
   late var lat;
   late var long;
   late CameraPosition _kGooglePlex;
@@ -172,7 +86,7 @@ class MapSampleState extends State<MapSample> {
     return per;
   }
 
-  Future<Position> getLatAndLong() async {
+  Future<Position?> getLatAndLong() async {
     cl = await Geolocator.getCurrentPosition().then((value) => value);
     lat = cl.latitude;
     long = cl.longitude;
@@ -184,6 +98,7 @@ class MapSampleState extends State<MapSample> {
 
   @override
   void initState() {
+    setMarkerCustomImage();
     getper();
     getLatAndLong();
     super.initState();
@@ -192,8 +107,38 @@ class MapSampleState extends State<MapSample> {
   final Completer<GoogleMapController> _controller =
       Completer<GoogleMapController>();
   late GoogleMapController gmc;
+  setMarkerCustomImage() async {
+    mymarker.add(Marker(
+        onTap: () {
+          print("object");
+        },
+        draggable: true,
+        onDragEnd: (LatLng t) {
+          print("drag end");
+        },
+        icon: await BitmapDescriptor.fromAssetImage(
+            ImageConfiguration.empty, "Speed.jpg"),
+        markerId: const MarkerId("2"),
+        infoWindow: InfoWindow(
+            title: "2",
+            onTap: () {
+              print("2");
+            }),
+        position: LatLng(31.042639, 29.964639)));
+  }
+
   Set<Marker> mymarker = {
-    Marker(markerId: MarkerId("1"), position: LatLng(cl.latitude, cl.longitude))
+    Marker(
+        onTap: () {
+          print("object");
+        },
+        markerId: const MarkerId("1"),
+        infoWindow: InfoWindow(
+            title: "1",
+            onTap: () {
+              print("1");
+            }),
+        position: LatLng(cl.latitude, cl.longitude)),
   };
   @override
   Widget build(BuildContext context) {
@@ -223,17 +168,12 @@ class MapSampleState extends State<MapSample> {
       Text('$street'),
       ElevatedButton(
           onPressed: () async {
-            cl = await getLatAndLong();
+            cl = (await getLatAndLong())!;
             print("lat ${cl.latitude}");
             print("Long ${cl.longitude}");
             List<Placemark> placemarks =
                 await placemarkFromCoordinates(cl.latitude, cl.longitude);
-            print(placemarks[0].country);
-            print(placemarks[0].administrativeArea);
-            print(placemarks[0].locality);
-            print(placemarks[0].subLocality);
-            print(placemarks[0].postalCode);
-            print(placemarks[0].street);
+
             setState(() {
               posla = cl.latitude;
               poslo = cl.longitude;
