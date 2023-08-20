@@ -60,6 +60,7 @@ class MapSampleState extends State<MapSample> {
       speed: 0,
       speedAccuracy: 0);
   // ignore: prefer_typing_uninitialized_variables
+  late StreamSubscription<Position> ps;
   late var lat;
   late var long;
   late CameraPosition _kGooglePlex;
@@ -92,12 +93,19 @@ class MapSampleState extends State<MapSample> {
     long = cl.longitude;
     _kGooglePlex = CameraPosition(
         target: LatLng(lat, long), zoom: 12.4746, tilt: 45, bearing: 45);
+    mymarker.add(Marker(
+      markerId: MarkerId("1"),
+      position: LatLng(lat, long),
+    ));
     setState(() {});
     return cl;
   }
 
   @override
   void initState() {
+    ps = Geolocator.getPositionStream().listen((Position? position) {
+      changemarker(position?.latitude, position?.longitude);
+    });
     setMarkerCustomImage();
     getper();
     getLatAndLong();
@@ -116,8 +124,7 @@ class MapSampleState extends State<MapSample> {
         onDragEnd: (LatLng t) {
           print("drag end");
         },
-        icon: await BitmapDescriptor.fromAssetImage(
-            ImageConfiguration.empty, "Speed.jpg"),
+        icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueOrange),
         markerId: const MarkerId("2"),
         infoWindow: InfoWindow(
             title: "2",
@@ -127,19 +134,14 @@ class MapSampleState extends State<MapSample> {
         position: LatLng(31.042639, 29.964639)));
   }
 
-  Set<Marker> mymarker = {
-    Marker(
-        onTap: () {
-          print("object");
-        },
-        markerId: const MarkerId("1"),
-        infoWindow: InfoWindow(
-            title: "1",
-            onTap: () {
-              print("1");
-            }),
-        position: LatLng(cl.latitude, cl.longitude)),
-  };
+  Set<Marker> mymarker = {};
+  changemarker(newlat, newlong) {
+    mymarker.remove(Marker(markerId: MarkerId("1")));
+    mymarker.add(
+        Marker(markerId: MarkerId("1"), position: LatLng(newlat, newlong)));
+    setState(() {});
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -151,6 +153,7 @@ class MapSampleState extends State<MapSample> {
                 markers: mymarker,
                 mapType: MapType.hybrid,
                 initialCameraPosition: _kGooglePlex,
+                onTap: (LatLng) {},
                 onMapCreated: (GoogleMapController controller) {
                   gmc = controller;
                 },
